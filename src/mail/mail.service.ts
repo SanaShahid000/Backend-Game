@@ -35,14 +35,12 @@ export class MailService {
     }
   }
 
-  async sendEmailVerificationCode(params: { to: string; code: string }) {
-    if (this.logVerificationCode) {
-      console.log(`Email verification code for ${params.to}: ${params.code}`);
-      this.logger.log(
-        `Email verification code for ${params.to}: ${params.code}`,
-      );
-    }
-
+  async sendEmail(params: {
+    to: string;
+    subject: string;
+    text: string;
+    html?: string;
+  }) {
     if (!this.sendGridEnabled) {
       if (this.isProduction || this.requireSendGrid) {
         throw new Error('SendGrid is disabled');
@@ -57,8 +55,32 @@ export class MailService {
       return;
     }
 
-    await sgMail.send({
-      from: this.from,
+    try {
+      await sgMail.send({
+        from: this.from,
+        to: params.to,
+        subject: params.subject,
+        text: params.text,
+        html: params.html,
+      });
+      this.logger.log(`Email sent to ${params.to}`);
+    } catch (error) {
+      this.logger.error(`Failed to send email to ${params.to}`, error.stack);
+      if (this.isProduction || this.requireSendGrid) {
+        throw error;
+      }
+    }
+  }
+
+  async sendEmailVerificationCode(params: { to: string; code: string }) {
+    if (this.logVerificationCode) {
+      console.log(`Email verification code for ${params.to}: ${params.code}`);
+      this.logger.log(
+        `Email verification code for ${params.to}: ${params.code}`,
+      );
+    }
+
+    await this.sendEmail({
       to: params.to,
       subject: 'Verify your email',
       text: `Your verification code is: ${params.code}`,

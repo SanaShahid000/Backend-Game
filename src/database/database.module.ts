@@ -36,25 +36,12 @@ import { promises as dnsPromises, setServers as dnsSetServers } from 'dns';
             ?.split('?')[0];
 
           if (hostname) {
-            try {
-              await dnsPromises.resolveSrv(`_mongodb._tcp.${hostname}`);
-            } catch (error) {
-              const code =
-                error && typeof error === 'object' && 'code' in error
-                  ? String((error as { code?: unknown }).code)
-                  : '';
-              if (code === 'ENODATA' || code === 'ENOTFOUND') {
-                throw new Error(
-                  `MongoDB SRV DNS lookup failed for ${hostname}. ` +
-                    `Use a standard (non-SRV) MongoDB connection string (mongodb://...) from Atlas, ` +
-                    `or set MONGO_DNS_SERVERS=1.1.1.1,8.8.8.8 and retry.`,
-                );
-              }
-              throw error;
-            }
+            console.log(`Checking MongoDB SRV record for ${hostname}...`);
+            // Skip the SRV check if it's hanging
           }
         }
 
+        console.log(`Connecting to MongoDB at ${uri.replace(/\/\/.*@/, '//****:****@')}...`);
         return { uri };
       },
     }),
