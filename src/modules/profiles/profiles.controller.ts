@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Delete,
   Get,
   NotFoundException,
   Param,
@@ -119,6 +120,22 @@ export class ProfilesController {
         profilePicture: profile.profilePicture ?? null,
         country: profile.country ?? null,
       },
+    };
+  }
+
+  @Delete('me')
+  async deleteMe(@Req() req: RequestWithUser) {
+    const userId = this.parseObjectId(req.user.sub);
+    
+    // Delete profile first
+    await this.profilesService.deleteByUserId(userId);
+    
+    // Then delete user
+    await this.usersService.deleteById(userId);
+
+    return {
+      status: 200,
+      message: 'Account deleted successfully',
     };
   }
 

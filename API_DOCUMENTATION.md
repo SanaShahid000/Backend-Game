@@ -65,3 +65,7 @@ GCS Upload: Requires Google credentials via `GOOGLE_APPLICATION_CREDENTIALS` (se
 ### PATCH `/profile/me/country`
 - Purpose: Update logged-in user's `country`.
 - Returns: `{ "status": 200, "message": "Country updated successfully", "data": { ... } }`
+
+### DELETE `/profile/me`
+- Purpose: Permanently delete the logged-in user's account and profile.
+- Returns: `{ "status": 200, "message": "Account deleted successfully" }`

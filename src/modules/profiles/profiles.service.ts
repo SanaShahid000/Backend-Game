@@ -46,4 +46,8 @@ export class ProfilesService {
       )
       .exec();
   }
+
+  async deleteByUserId(userId: Types.ObjectId) {
+    return await this.profileModel.findOneAndDelete({ userId }).exec();
+  }
 }
