@@ -18,6 +18,9 @@ export class Profile {
 
   @Prop({ type: String, default: null })
   country!: string | null;
+
+  @Prop({ type: MongooseSchema.Types.Mixed, default: null })
+  carDetails!: Record<string, any> | null;
 }
 
 export const ProfileSchema = SchemaFactory.createForClass(Profile);

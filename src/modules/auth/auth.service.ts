@@ -47,6 +47,31 @@ export class AuthService {
     return { message: 'Verification code sent' };
   }
 
+  async resendCode(params: { email: string }) {
+    const user = await this.usersService.findByEmail(params.email);
+    if (!user) {
+      throw new BadRequestException('Invalid email');
+    }
+
+    if (user.emailVerifiedAt) {
+      return { message: 'Email already verified' };
+    }
+
+    const code = this.generateSixDigitCode();
+    const codeHash = await bcrypt.hash(code, 12);
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+
+    await this.usersService.setEmailVerificationCode({
+      userId: user._id,
+      codeHash,
+      expiresAt,
+    });
+
+    await this.mailService.sendEmailVerificationCode({ to: user.email, code });
+
+    return { message: 'Verification code resent' };
+  }
+
   async verifyEmail(params: { email: string; code: string }) {
     const user = await this.usersService.findByEmail(params.email);
     if (!user) {

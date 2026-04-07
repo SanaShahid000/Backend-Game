@@ -38,9 +38,13 @@ export class ProfilesController {
 
     const profile = await this.profilesService.findByUserId(userId);
     return {
-      username: user.username,
-      profilePicture: profile?.profilePicture ?? null,
-      country: profile?.country ?? null,
+      status: 200,
+      message: 'Profile retrieved successfully',
+      data: {
+        username: user.username,
+        profilePicture: profile?.profilePicture ?? null,
+        country: profile?.country ?? null,
+      },
     };
   }
 
@@ -54,9 +58,13 @@ export class ProfilesController {
 
     const profile = await this.profilesService.findByUserId(parsedUserId);
     return {
-      username: user.username,
-      profilePicture: profile?.profilePicture ?? null,
-      country: profile?.country ?? null,
+      status: 200,
+      message: 'Profile retrieved successfully',
+      data: {
+        username: user.username,
+        profilePicture: profile?.profilePicture ?? null,
+        country: profile?.country ?? null,
+      },
     };
   }
 
@@ -77,9 +85,13 @@ export class ProfilesController {
     });
 
     return {
-      username: user.username,
-      profilePicture: profile.profilePicture ?? null,
-      country: profile.country ?? null,
+      status: 200,
+      message: 'Country updated successfully',
+      data: {
+        username: user.username,
+        profilePicture: profile.profilePicture ?? null,
+        country: profile.country ?? null,
+      },
     };
   }
 
@@ -100,9 +112,13 @@ export class ProfilesController {
     });
 
     return {
-      username: user.username,
-      profilePicture: profile.profilePicture ?? null,
-      country: profile.country ?? null,
+      status: 200,
+      message: 'Profile updated successfully',
+      data: {
+        username: user.username,
+        profilePicture: profile.profilePicture ?? null,
+        country: profile.country ?? null,
+      },
     };
   }
 
