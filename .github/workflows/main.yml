@@ -1,4 +1,4 @@
-name: TMS Production CI/CD Pipeline
+name: Rebel Cars Game Server Nest CI/CD Pipeline
 
 on:
   push:
@@ -12,48 +12,32 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install Dependencies
-        # Using legacy-peer-deps exactly as you had it configured
         run: npm install --legacy-peer-deps
 
-      - name: Configure Standalone Build & Env
+      - name: Create Env File
         env:
           ENV_FILE: ${{ secrets.PROD_ENV_FILE }}
         run: |
-          # Write the environment variables cleanly (fixed to avoid wrapping in ENV_FILE=)
           echo "${ENV_FILE}" > .env
 
-          # Dynamically inject 'output: "standalone"' into next.config file (.js, .mjs, or .ts)
-          CONFIG_FILE=$(find . -maxdepth 1 -name "next.config.*" | head -n 1)
-          if [ -n "$CONFIG_FILE" ]; then
-            echo "Patching $CONFIG_FILE for standalone build..."
-            # Finds the line with 'nextConfig' and an opening '{', then injects the setting
-            sed -i '/nextConfig.*{/s/{/{\n  output: "standalone",/' "$CONFIG_FILE"
-          else
-            echo "Creating next.config.js..."
-            echo "module.exports = { output: 'standalone' }" > next.config.js
-          fi
-      - name: Build Application on GitHub
+      - name: Build Application
         run: |
+          # This creates the 'dist' folder for NestJS
           NODE_OPTIONS="--max-old-space-size=2048" npm run build
 
-          # Assemble the Next.js standalone folder for transfer
-          cp -r public .next/standalone/ 2>/dev/null || :
-          cp -r .next/static .next/standalone/.next/ 2>/dev/null || :
-
-          # IMPORTANT: Copy the generated .env file into standalone so the server can read it
-          cp .env .next/standalone/ 2>/dev/null || :
       - name: Copy Build Artifacts to Server
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.PROD_SERVER_IP }}
           username: ${{ secrets.PROD_SERVER_USER }}
           key: ${{ secrets.PROD_SERVER_SSH_KEY }}
-          # We only copy the highly optimized standalone output
-          source: '.next/standalone'
-          target: '/home/rebelcars_io/@Server/RebelCarsNest'
-          strip_components: 2 # Drops the files cleanly into the target folder without the '.next/standalone' nesting
+          # Copy the NestJS build folder, package files, and env vars
+          source: "dist,package.json,package-lock.json,.env"
+          target: "/home/rebelcars_io/@Server/RebelCarsNest"
+          # Set to 0 so the files map directly into the target folder
+          strip_components: 0
 
-      - name: Restart PM2 Service
+      - name: Install Prod Dependencies and Restart PM2
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.PROD_SERVER_IP }}
@@ -64,7 +48,10 @@ jobs:
             [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 
             cd /home/rebelcars_io/@Server/RebelCarsNest
-            # export PORT=4000
-            # Start or reload the application using PM2
-            pm2 describe rebel-cars-nest-server > /dev/null && pm2 reload rebel-cars-nest-server || pm2 start server.js --name "rebel-cars-nest-server"
+            
+            # Install only production dependencies on the server
+            npm install --omit=dev --legacy-peer-deps
+
+            # Start or reload the application using the NestJS entry point (dist/main.js)
+            pm2 describe rebel-cars-nest-server > /dev/null && pm2 reload rebel-cars-nest-server || pm2 start dist/main.js --name "rebel-cars-nest-server"
             pm2 save
