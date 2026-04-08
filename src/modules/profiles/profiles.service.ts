@@ -50,4 +50,19 @@ export class ProfilesService {
   async deleteByUserId(userId: Types.ObjectId) {
     return await this.profileModel.findOneAndDelete({ userId }).exec();
   }
+
+  async addCarPreset(userId: Types.ObjectId, preset: string) {
+    return await this.profileModel
+      .findOneAndUpdate(
+        { userId },
+        { $push: { carPresets: preset } },
+        { new: true, upsert: true },
+      )
+      .exec();
+  }
+
+  async getCarPresets(userId: Types.ObjectId) {
+    const profile = await this.profileModel.findOne({ userId }).exec();
+    return profile?.carPresets ?? [];
+  }
 }

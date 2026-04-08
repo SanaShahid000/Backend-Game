@@ -21,6 +21,9 @@ export class Profile {
 
   @Prop({ type: MongooseSchema.Types.Mixed, default: null })
   carDetails!: Record<string, any> | null;
+
+  @Prop({ type: [String], default: [] })
+  carPresets!: string[];
 }
 
 export const ProfileSchema = SchemaFactory.createForClass(Profile);

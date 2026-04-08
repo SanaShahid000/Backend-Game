@@ -52,19 +52,28 @@ GCS Upload: Requires Google credentials via `GOOGLE_APPLICATION_CREDENTIALS` (se
 
 ### GET `/profile/me`
 - Purpose: Get logged-in user profile summary.
-- Returns: `{ "status": 200, "message": "Profile retrieved successfully", "data": { "username": "...", "profilePicture": "...", "country": "..." } }`
+- Returns: `{ "status": 200, "message": "Profile retrieved successfully", "data": { "username": "...", "profilePicture": "...", "country": "...", "carPresets": ["..."] } }`
+
+### GET `/profile/me/presets`
+- Purpose: Get all car presets for the logged-in user.
+- Returns: `{ "status": 200, "message": "Presets retrieved successfully", "data": ["JSON string 1", "JSON string 2"] }`
+
+### POST `/profile/me/presets`
+- Purpose: Add a new car preset (as JSON object) to the user's list.
+- Body: JSON `{ "preset": { "carPresetName": "...", ... } }`
+- Returns: `{ "status": 200, "message": "Preset added successfully", "data": ["..."] }`
 
 ### GET `/profile/:userId`
 - Purpose: Get a user's profile by their userId.
-- Returns: `{ "status": 200, "message": "Profile retrieved successfully", "data": { "username": "...", "profilePicture": "...", "country": "..." } }`
+- Returns: `{ "status": 200, "message": "Profile retrieved successfully", "data": { "username": "...", "profilePicture": "...", "country": "...", "carPresets": [{...}] } }`
 
 ### PATCH `/profile/me`
 - Purpose: Update logged-in user's `carDetails` / `profilePicture` / `country`.
-- Returns: `{ "status": 200, "message": "Profile updated successfully", "data": { ... } }`
+- Returns: `{ "status": 200, "message": "Profile updated successfully", "data": { "username": "...", "profilePicture": "...", "country": "...", "carPresets": [{...}] } }`
 
 ### PATCH `/profile/me/country`
 - Purpose: Update logged-in user's `country`.
-- Returns: `{ "status": 200, "message": "Country updated successfully", "data": { ... } }`
+- Returns: `{ "status": 200, "message": "Country updated successfully", "data": { "username": "...", "profilePicture": "...", "country": "...", "carPresets": [{...}] } }`
 
 ### DELETE `/profile/me`
 - Purpose: Permanently delete the logged-in user's account and profile.

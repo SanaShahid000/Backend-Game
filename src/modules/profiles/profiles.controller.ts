@@ -7,6 +7,7 @@ import {
   NotFoundException,
   Param,
   Patch,
+  Post,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -18,6 +19,7 @@ import { UsersService } from '../users/users.service';
 import { ProfilesService } from './profiles.service';
 import { UpdateCountryDto } from './dto/update-country.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
+import { AddPresetDto } from './dto/add-preset.dto';
 
 type RequestWithUser = Request & { user: JwtPayload };
 
@@ -41,11 +43,7 @@ export class ProfilesController {
     return {
       status: 200,
       message: 'Profile retrieved successfully',
-      data: {
-        username: user.username,
-        profilePicture: profile?.profilePicture ?? null,
-        country: profile?.country ?? null,
-      },
+      data: this.formatProfileData(user.username, profile),
     };
   }
 
@@ -61,11 +59,7 @@ export class ProfilesController {
     return {
       status: 200,
       message: 'Profile retrieved successfully',
-      data: {
-        username: user.username,
-        profilePicture: profile?.profilePicture ?? null,
-        country: profile?.country ?? null,
-      },
+      data: this.formatProfileData(user.username, profile),
     };
   }
 
@@ -88,11 +82,7 @@ export class ProfilesController {
     return {
       status: 200,
       message: 'Country updated successfully',
-      data: {
-        username: user.username,
-        profilePicture: profile.profilePicture ?? null,
-        country: profile.country ?? null,
-      },
+      data: this.formatProfileData(user.username, profile),
     };
   }
 
@@ -115,11 +105,7 @@ export class ProfilesController {
     return {
       status: 200,
       message: 'Profile updated successfully',
-      data: {
-        username: user.username,
-        profilePicture: profile.profilePicture ?? null,
-        country: profile.country ?? null,
-      },
+      data: this.formatProfileData(user.username, profile),
     };
   }
 
@@ -137,6 +123,48 @@ export class ProfilesController {
       status: 200,
       message: 'Account deleted successfully',
     };
+  }
+
+  @Post('me/presets')
+  async addPreset(@Body() dto: AddPresetDto, @Req() req: RequestWithUser) {
+    const userId = this.parseObjectId(req.user.sub);
+    const presetString = JSON.stringify(dto.preset);
+    const profile = await this.profilesService.addCarPreset(userId, presetString);
+    return {
+      status: 200,
+      message: 'Preset added successfully',
+      data: this.parsePresets(profile.carPresets),
+    };
+  }
+
+  @Get('me/presets')
+  async getPresets(@Req() req: RequestWithUser) {
+    const userId = this.parseObjectId(req.user.sub);
+    const presets = await this.profilesService.getCarPresets(userId);
+    return {
+      status: 200,
+      message: 'Presets retrieved successfully',
+      data: this.parsePresets(presets),
+    };
+  }
+
+  private formatProfileData(username: string, profile: any) {
+    return {
+      username,
+      profilePicture: profile?.profilePicture ?? null,
+      country: profile?.country ?? null,
+      carPresets: this.parsePresets(profile?.carPresets ?? []),
+    };
+  }
+
+  private parsePresets(presets: string[]) {
+    return presets.map((p) => {
+      try {
+        return JSON.parse(p);
+      } catch (e) {
+        return p;
+      }
+    });
   }
 
   private parseObjectId(value: string) {
