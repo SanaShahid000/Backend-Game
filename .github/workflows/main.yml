@@ -1,0 +1,70 @@
+name: TMS Production CI/CD Pipeline
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install Dependencies
+        # Using legacy-peer-deps exactly as you had it configured
+        run: npm install --legacy-peer-deps
+
+      - name: Configure Standalone Build & Env
+        env:
+          ENV_FILE: ${{ secrets.PROD_ENV_FILE }}
+        run: |
+          # Write the environment variables cleanly (fixed to avoid wrapping in ENV_FILE=)
+          echo "${ENV_FILE}" > .env
+
+          # Dynamically inject 'output: "standalone"' into next.config file (.js, .mjs, or .ts)
+          CONFIG_FILE=$(find . -maxdepth 1 -name "next.config.*" | head -n 1)
+          if [ -n "$CONFIG_FILE" ]; then
+            echo "Patching $CONFIG_FILE for standalone build..."
+            # Finds the line with 'nextConfig' and an opening '{', then injects the setting
+            sed -i '/nextConfig.*{/s/{/{\n  output: "standalone",/' "$CONFIG_FILE"
+          else
+            echo "Creating next.config.js..."
+            echo "module.exports = { output: 'standalone' }" > next.config.js
+          fi
+      - name: Build Application on GitHub
+        run: |
+          NODE_OPTIONS="--max-old-space-size=2048" npm run build
+
+          # Assemble the Next.js standalone folder for transfer
+          cp -r public .next/standalone/ 2>/dev/null || :
+          cp -r .next/static .next/standalone/.next/ 2>/dev/null || :
+
+          # IMPORTANT: Copy the generated .env file into standalone so the server can read it
+          cp .env .next/standalone/ 2>/dev/null || :
+      - name: Copy Build Artifacts to Server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.PROD_SERVER_IP }}
+          username: ${{ secrets.PROD_SERVER_USER }}
+          key: ${{ secrets.PROD_SERVER_SSH_KEY }}
+          # We only copy the highly optimized standalone output
+          source: '.next/standalone'
+          target: '/home/rebelcars_io/@Server/RebelCarsNest'
+          strip_components: 2 # Drops the files cleanly into the target folder without the '.next/standalone' nesting
+
+      - name: Restart PM2 Service
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.PROD_SERVER_IP }}
+          username: ${{ secrets.PROD_SERVER_USER }}
+          key: ${{ secrets.PROD_SERVER_SSH_KEY }}
+          script: |
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+
+            cd /home/rebelcars_io/@Server/RebelCarsNest
+            # export PORT=4000
+            # Start or reload the application using PM2
+            pm2 describe rebel-cars-nest-server > /dev/null && pm2 reload rebel-cars-nest-server || pm2 start server.js --name "rebel-cars-nest-server"
+            pm2 save
