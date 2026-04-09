@@ -22,6 +22,9 @@ export class User {
 
   @Prop({ type: Date, default: null })
   emailVerificationCodeExpiresAt!: Date | null;
+
+  @Prop({ type: String, default: null })
+  accessToken!: string | null;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

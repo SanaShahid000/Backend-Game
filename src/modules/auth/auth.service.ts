@@ -102,7 +102,30 @@ export class AuthService {
     }
 
     await this.usersService.markEmailVerified(user._id);
-    return { message: 'Email verified' };
+
+    const payload = {
+      sub: user._id.toString(),
+      email: user.email,
+    };
+
+    // Generate token once during verification
+    const accessToken = await this.jwtService.signAsync(payload, {
+      noTimestamp: true,
+    });
+
+    // Save token to user record
+    await this.usersService.setAccessToken(user._id, accessToken);
+
+    const profile = await this.profilesService.findByUserId(user._id);
+
+    return {
+      accessToken,
+      profile: {
+        userId: user._id.toString(),
+        username: user.username,
+        profilePicture: profile?.profilePicture ?? null,
+      },
+    };
   }
 
   async login(params: { email: string; password: string }) {
@@ -120,12 +143,35 @@ export class AuthService {
       throw new ForbiddenException('Email verification required');
     }
 
+    // Retrieve the stored token instead of generating a new one
+    const accessToken = user.accessToken;
+    if (!accessToken) {
+      // Fallback in case token wasn't stored (e.g. for existing users before this change)
+      return await this.getAuthResponse(user);
+    }
+
+    const profile = await this.profilesService.findByUserId(user._id);
+
+    return {
+      accessToken,
+      profile: {
+        userId: user._id.toString(),
+        username: user.username,
+        profilePicture: profile?.profilePicture ?? null,
+      },
+    };
+  }
+
+  private async getAuthResponse(user: any) {
     const payload = {
       sub: user._id.toString(),
       email: user.email,
     };
-    const accessToken = await this.jwtService.signAsync(payload);
 
+    // To make tokens identical across different calls, we disable the automatic "iat" (issued at) timestamp.
+    const accessToken = await this.jwtService.signAsync(payload, {
+      noTimestamp: true,
+    });
     const profile = await this.profilesService.findByUserId(user._id);
 
     return {

@@ -30,9 +30,12 @@ export class AuthController {
   @Post('verify-email')
   async verifyEmail(@Body() dto: VerifyEmailDto) {
     const result = await this.authService.verifyEmail(dto);
+    const message = 'message' in result ? result.message : 'Email verified successfully';
+    const data = 'accessToken' in result ? result : {};
     return {
       status: 200,
-      message: result.message,
+      message,
+      data,
     };
   }
 

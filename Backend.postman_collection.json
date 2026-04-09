@@ -60,6 +60,21 @@
           }
         },
         {
+          "name": "POST /auth/resend-code",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user1@example.com\"\n}\n",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/auth/resend-code"
+          }
+        },
+        {
           "name": "POST /auth/login (sets token)",
           "event": [
             {
@@ -195,6 +210,35 @@
               "options": { "raw": { "language": "json" } }
             },
             "url": "{{baseUrl}}/profile/me/country"
+          }
+        },
+        {
+          "name": "GET /profile/me/presets",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/profile/me/presets"
+          }
+        },
+        {
+          "name": "POST /profile/me/presets",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"preset\": {\n    \"carPresetName\": \"My Awesome Car\",\n    \"color\": \"Blue\"\n  }\n}\n",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/profile/me/presets"
+          }
+        },
+        {
+          "name": "DELETE /profile/me",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/profile/me"
           }
         }
       ]

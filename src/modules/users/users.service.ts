@@ -87,6 +87,16 @@ export class UsersService {
     return updated;
   }
 
+  async setAccessToken(userId: Types.ObjectId, accessToken: string) {
+    const updated = await this.userModel
+      .findByIdAndUpdate(userId, { accessToken }, { new: true })
+      .exec();
+    if (!updated) {
+      throw new NotFoundException('User not found');
+    }
+    return updated;
+  }
+
   async deleteById(userId: Types.ObjectId) {
     const deleted = await this.userModel.findByIdAndDelete(userId).exec();
     if (!deleted) {
