@@ -23,8 +23,8 @@ export class User {
   @Prop({ type: Date, default: null })
   emailVerificationCodeExpiresAt!: Date | null;
 
-  @Prop({ type: String, default: null })
-  accessToken!: string | null;
+  @Prop({ type: Date, default: null })
+  lastLogoutAt!: Date | null;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

@@ -1,12 +1,17 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
+import { Types } from 'mongoose';
 import { JwtPayload } from '../../../common/types/jwt-payload.type';
+import { UsersService } from '../../users/users.service';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor(configService: ConfigService) {
+  constructor(
+    configService: ConfigService,
+    private readonly usersService: UsersService,
+  ) {
     const nodeEnv = configService.get<string>('NODE_ENV') ?? 'development';
     const secretFromEnv = configService.get<string>('JWT_SECRET');
     const secret =
@@ -22,7 +27,20 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  validate(payload: JwtPayload) {
+  async validate(payload: JwtPayload) {
+    const user = await this.usersService.findById(new Types.ObjectId(payload.sub));
+
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    const tokenLastLogout = payload.lastLogoutAt ? new Date(payload.lastLogoutAt) : null;
+    const userLastLogout = user.lastLogoutAt;
+
+    if (tokenLastLogout?.getTime() !== userLastLogout?.getTime()) {
+      throw new UnauthorizedException('Token has been invalidated');
+    }
+
     return payload;
   }
 }

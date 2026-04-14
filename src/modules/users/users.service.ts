@@ -87,9 +87,9 @@ export class UsersService {
     return updated;
   }
 
-  async setAccessToken(userId: Types.ObjectId, accessToken: string) {
+  async setLastLogout(userId: Types.ObjectId) {
     const updated = await this.userModel
-      .findByIdAndUpdate(userId, { accessToken }, { new: true })
+      .findByIdAndUpdate(userId, { lastLogoutAt: new Date() }, { new: true })
       .exec();
     if (!updated) {
       throw new NotFoundException('User not found');

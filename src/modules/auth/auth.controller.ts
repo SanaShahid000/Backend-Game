@@ -1,9 +1,15 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
+import type { Request } from 'express';
+import { Types } from 'mongoose';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { JwtPayload } from '../../common/types/jwt-payload.type';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { SignupDto } from './dto/signup.dto';
 import { VerifyEmailDto } from './dto/verify-email.dto';
 import { ResendCodeDto } from './dto/resend-code.dto';
+
+type RequestWithUser = Request & { user: JwtPayload };
 
 @Controller('auth')
 export class AuthController {
@@ -46,6 +52,16 @@ export class AuthController {
       status: 200,
       message: 'Login successful',
       data: result,
+    };
+  }
+
+  @Post('logout')
+  @UseGuards(JwtAuthGuard)
+  async logout(@Req() req: RequestWithUser) {
+    const result = await this.authService.logout(new Types.ObjectId(req.user.sub));
+    return {
+      status: 200,
+      message: result.message,
     };
   }
 }
