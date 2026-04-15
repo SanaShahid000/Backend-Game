@@ -21,7 +21,12 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  async signup(params: { email: string; username: string; password: string }) {
+  async signup(params: {
+    email: string;
+    username: string;
+    password: string;
+    country?: string;
+  }) {
     const passwordHash = await bcrypt.hash(params.password, 12);
     const user = await this.usersService.createUser({
       email: params.email,
@@ -31,6 +36,7 @@ export class AuthService {
 
     await this.profilesService.createForUser({
       userId: user._id,
+      country: params.country,
     });
 
     const code = this.generateSixDigitCode();
@@ -148,6 +154,7 @@ export class AuthService {
         userId: user._id.toString(),
         username: user.username,
         profilePicture: profile?.profilePicture ?? null,
+        country: profile?.country ?? null,
       },
     };
   }
