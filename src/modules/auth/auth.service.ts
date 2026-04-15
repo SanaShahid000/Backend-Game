@@ -155,6 +155,13 @@ export class AuthService {
         username: user.username,
         profilePicture: profile?.profilePicture ?? null,
         country: profile?.country ?? null,
+        carPresets: (profile?.carPresets ?? []).map((p: string) => {
+          try {
+            return JSON.parse(p);
+          } catch (e) {
+            return p;
+          }
+        }),
       },
     };
   }
