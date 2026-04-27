@@ -128,12 +128,11 @@ export class ProfilesController {
   @Post('me/presets')
   async addPreset(@Body() dto: AddPresetDto, @Req() req: RequestWithUser) {
     const userId = this.parseObjectId(req.user.sub);
-    const presetString = JSON.stringify(dto.preset);
-    const profile = await this.profilesService.addCarPreset(userId, presetString);
+    const profile = await this.profilesService.addCarPreset(userId, dto.preset);
     return {
       status: 200,
       message: 'Preset added successfully',
-      data: this.parsePresets(profile.carPresets),
+      data: profile.carPresets,
     };
   }
 
@@ -144,7 +143,7 @@ export class ProfilesController {
     return {
       status: 200,
       message: 'Presets retrieved successfully',
-      data: this.parsePresets(presets),
+      data: presets,
     };
   }
 
@@ -153,18 +152,8 @@ export class ProfilesController {
       username,
       profilePicture: profile?.profilePicture ?? null,
       country: profile?.country ?? null,
-      carPresets: this.parsePresets(profile?.carPresets ?? []),
+      carPresets: profile?.carPresets ?? [],
     };
-  }
-
-  private parsePresets(presets: string[]) {
-    return presets.map((p) => {
-      try {
-        return JSON.parse(p);
-      } catch (e) {
-        return p;
-      }
-    });
   }
 
   private parseObjectId(value: string) {

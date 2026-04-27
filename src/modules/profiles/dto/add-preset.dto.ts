@@ -1,7 +1,7 @@
-import { IsNotEmpty, IsObject } from 'class-validator';
+import { IsNotEmpty, IsString } from 'class-validator';
 
 export class AddPresetDto {
-  @IsObject()
+  @IsString()
   @IsNotEmpty()
-  preset!: Record<string, any>;
+  preset!: string;
 }
