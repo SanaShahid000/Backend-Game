@@ -132,7 +132,7 @@ export class ProfilesController {
     return {
       status: 200,
       message: 'Preset added successfully',
-      data: profile.carPresets,
+      data: profile.carPresets[0] ?? null,
     };
   }
 
@@ -143,7 +143,7 @@ export class ProfilesController {
     return {
       status: 200,
       message: 'Presets retrieved successfully',
-      data: presets,
+      data: presets[0] ?? null,
     };
   }
 
@@ -152,7 +152,7 @@ export class ProfilesController {
       username,
       profilePicture: profile?.profilePicture ?? null,
       country: profile?.country ?? null,
-      carPresets: profile?.carPresets ?? [],
+      carPresets: profile?.carPresets?.[0] ?? null,
     };
   }
 

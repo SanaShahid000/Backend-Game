@@ -55,7 +55,7 @@ export class ProfilesService {
     return await this.profileModel
       .findOneAndUpdate(
         { userId },
-        { $push: { carPresets: preset } },
+        { $set: { carPresets: [preset] } },
         { new: true, upsert: true },
       )
       .exec();

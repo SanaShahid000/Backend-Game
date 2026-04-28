@@ -155,7 +155,7 @@ export class AuthService {
         username: user.username,
         profilePicture: profile?.profilePicture ?? null,
         country: profile?.country ?? null,
-        carPresets: profile?.carPresets ?? [],
+        carPresets: profile?.carPresets?.[0] ?? null,
       },
     };
   }
