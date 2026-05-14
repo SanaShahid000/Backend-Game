@@ -24,7 +24,17 @@ GCS Upload: Requires Google credentials via `GOOGLE_APPLICATION_CREDENTIALS` (se
 
 ### POST `/auth/verify-email`
 - Purpose: Verify user email using the 6-digit code sent at signup.
-- Returns: `{ "status": 200, "message": "Email verified", "data": { "accessToken": "...", "profile": { ... } } }`
+- Returns: Marks user as verified so login is allowed.
+
+### POST `/auth/forgot-password`
+- Purpose: Request a password reset code.
+- Body: JSON `{ "email": "user@example.com" }`
+- Returns: Success message even if email doesn't exist (security).
+
+### POST `/auth/reset-password`
+- Purpose: Reset password using the 6-digit code.
+- Body: JSON `{ "email": "user@example.com", "code": "123456", "newPassword": "newsecurepassword" }`
+- Returns: Success message if code is valid.
 
 ### POST `/auth/login`
 - Purpose: Authenticate with email + password (requires email already verified).

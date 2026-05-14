@@ -8,6 +8,7 @@ import { LoginDto } from './dto/login.dto';
 import { SignupDto } from './dto/signup.dto';
 import { VerifyEmailDto } from './dto/verify-email.dto';
 import { ResendCodeDto } from './dto/resend-code.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
 type RequestWithUser = Request & { user: JwtPayload };
 
@@ -27,6 +28,24 @@ export class AuthController {
   @Post('resend-code')
   async resendCode(@Body() dto: ResendCodeDto) {
     const result = await this.authService.resendCode(dto);
+    return {
+      status: 200,
+      message: result.message,
+    };
+  }
+
+  @Post('forgot-password')
+  async forgotPassword(@Body() dto: ResendCodeDto) {
+    const result = await this.authService.requestPasswordReset(dto.email);
+    return {
+      status: 200,
+      message: result.message,
+    };
+  }
+
+  @Post('reset-password')
+  async resetPassword(@Body() dto: ResetPasswordDto) {
+    const result = await this.authService.resetPassword(dto);
     return {
       status: 200,
       message: result.message,

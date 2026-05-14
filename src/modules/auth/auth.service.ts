@@ -76,7 +76,65 @@ export class AuthService {
 
     await this.mailService.sendEmailVerificationCode({ to: user.email, code });
 
-    return { message: 'Verification code resent' };
+    return { message: 'Verification code sent' };
+  }
+
+  async requestPasswordReset(email: string) {
+    const user = await this.usersService.findByEmail(email);
+    if (!user) {
+      // For security reasons, don't reveal if email exists or not
+      return { message: 'If an account exists, a reset code has been sent' };
+    }
+
+    const code = this.generateSixDigitCode();
+    const codeHash = await bcrypt.hash(code, 12);
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 mins
+
+    await this.usersService.setPasswordResetCode({
+      userId: user._id,
+      codeHash,
+      expiresAt,
+    });
+
+    await this.mailService.sendEmail({
+      to: user.email,
+      subject: 'Password Reset Code',
+      text: `Your password reset code is: ${code}. It will expire in 15 minutes.`,
+    });
+
+    return { message: 'If an account exists, a reset code has been sent' };
+  }
+
+  async resetPassword(params: {
+    email: string;
+    code: string;
+    newPassword: string;
+  }) {
+    const user = await this.usersService.findByEmail(params.email);
+    if (!user) {
+      throw new BadRequestException('Invalid reset request');
+    }
+
+    if (!user.passwordResetCodeHash || !user.passwordResetCodeExpiresAt) {
+      throw new BadRequestException('Reset code not found');
+    }
+
+    if (user.passwordResetCodeExpiresAt.getTime() < Date.now()) {
+      throw new BadRequestException('Reset code expired');
+    }
+
+    const ok = await bcrypt.compare(params.code, user.passwordResetCodeHash);
+    if (!ok) {
+      throw new BadRequestException('Invalid reset code');
+    }
+
+    const passwordHash = await bcrypt.hash(params.newPassword, 12);
+    await this.usersService.updatePassword({
+      userId: user._id,
+      passwordHash,
+    });
+
+    return { message: 'Password reset successfully' };
   }
 
   async verifyEmail(params: { email: string; code: string }) {

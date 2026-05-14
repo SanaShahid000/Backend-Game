@@ -97,6 +97,45 @@ export class UsersService {
     return updated;
   }
 
+  async setPasswordResetCode(params: {
+    userId: Types.ObjectId;
+    codeHash: string;
+    expiresAt: Date;
+  }) {
+    const updated = await this.userModel
+      .findByIdAndUpdate(
+        params.userId,
+        {
+          passwordResetCodeHash: params.codeHash,
+          passwordResetCodeExpiresAt: params.expiresAt,
+        },
+        { new: true },
+      )
+      .exec();
+    if (!updated) {
+      throw new NotFoundException('User not found');
+    }
+    return updated;
+  }
+
+  async updatePassword(params: { userId: Types.ObjectId; passwordHash: string }) {
+    const updated = await this.userModel
+      .findByIdAndUpdate(
+        params.userId,
+        {
+          passwordHash: params.passwordHash,
+          passwordResetCodeHash: null,
+          passwordResetCodeExpiresAt: null,
+        },
+        { new: true },
+      )
+      .exec();
+    if (!updated) {
+      throw new NotFoundException('User not found');
+    }
+    return updated;
+  }
+
   async deleteById(userId: Types.ObjectId) {
     const deleted = await this.userModel.findByIdAndDelete(userId).exec();
     if (!deleted) {
